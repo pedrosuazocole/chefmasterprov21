@@ -3034,6 +3034,62 @@ app.get('/api/exportar/ventas/xlsx', requireAuth, (req, res) => {
 });
 
 // ==================================================
+// AJUSTE MANUAL DE STOCK EN INVENTARIO
+// ==================================================
+app.post('/inventario/ajuste', requireAuth, (req, res) => {
+    const { codigo, nuevoStock, nuevoCosto, motivo } = req.body;
+
+    if (!codigo) return res.status(400).json({ error: 'Código requerido' });
+
+    const stockNuevo = parseFloat(nuevoStock);
+    const costoNuevo = parseFloat(nuevoCosto);
+
+    if (isNaN(stockNuevo) || stockNuevo < 0)
+        return res.status(400).json({ error: 'Stock inválido (debe ser 0 o mayor)' });
+    if (isNaN(costoNuevo) || costoNuevo < 0)
+        return res.status(400).json({ error: 'Costo inválido (debe ser 0 o mayor)' });
+
+    const inventario = leerDatos(FILES.inventario);
+    const item = inventario.find(i => i.codigo === codigo);
+    if (!item) return res.status(404).json({ error: 'Artículo no encontrado' });
+
+    const stockAnterior = item.stock;
+    const costoAnterior = item.costoUnitario;
+
+    item.stock         = stockNuevo;
+    item.costoUnitario = costoNuevo;
+    guardarDatos(FILES.inventario, inventario);
+
+    // Registrar en Kardex
+    const kardex = leerDatos(FILES.kardex);
+    kardex.push({
+        id: generarId(),
+        producto: item.ingrediente,
+        fecha: isoHN(),
+        tipo: stockNuevo >= stockAnterior ? 'ENTRADA' : 'SALIDA',
+        documento: 'AJUSTE',
+        cantidad: Math.abs(stockNuevo - stockAnterior),
+        costoUnitario: costoNuevo,
+        valorTotal: Math.abs(stockNuevo - stockAnterior) * costoNuevo,
+        stockAnterior,
+        stockNuevo,
+        observaciones: motivo || 'Ajuste manual de stock'
+    });
+    guardarDatos(FILES.kardex, kardex);
+
+    const auditoria = leerDatos(FILES.auditoria);
+    auditoria.push({
+        id: generarId(), fecha: isoHN(), usuario: req.session.userId,
+        accion: 'AJUSTE_STOCK',
+        detalle: `${item.ingrediente}: stock ${stockAnterior}→${stockNuevo}, costo ${costoAnterior}→${costoNuevo}. Motivo: ${motivo||'Sin motivo'}`,
+        ip: req.ip
+    });
+    guardarDatos(FILES.auditoria, auditoria);
+
+    res.json({ success: true });
+});
+
+// ==================================================
 // RUTAS DE ADMINISTRACIÓN (solo admin)
 // ==================================================
 

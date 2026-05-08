@@ -235,16 +235,16 @@ async function cargarStock() {
         tbody.innerHTML = '';
         
         if (inventario.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay productos en inventario</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No hay productos en inventario</td></tr>';
             return;
         }
         
         inventario.forEach(item => {
-            const stock = parseFloat(item.stock || 0);
-            const costoUnitario = parseFloat(item.costoUnitario || 0);
-            const stockMinimo = parseFloat(item.stockMinimo || 0);
-            const valorTotal = stock * costoUnitario;
-            const esBajo = stock < stockMinimo;
+            const stock        = parseFloat(item.stock || 0);
+            const costoUnitario= parseFloat(item.costoUnitario || 0);
+            const stockMinimo  = parseFloat(item.stockMinimo || 0);
+            const valorTotal   = stock * costoUnitario;
+            const esBajo       = stock < stockMinimo;
             
             const estadoBadge = esBajo
                 ? '<span style="background:#ff4b4b;color:white;padding:0.2rem 0.6rem;border-radius:12px;font-size:0.8rem;">⚠️ BAJO</span>'
@@ -260,11 +260,66 @@ async function cargarStock() {
                     <td style="color:#0068c9;font-weight:bold;">L. ${costoUnitario.toFixed(2)}</td>
                     <td><strong>L. ${valorTotal.toFixed(2)}</strong></td>
                     <td>${estadoBadge}</td>
+                    <td>
+                        <button onclick="abrirModalAjuste('${item.codigo}','${item.ingrediente}',${stock},${costoUnitario})"
+                                style="background:#ff9800;color:white;border:none;border-radius:6px;padding:0.3rem 0.65rem;cursor:pointer;font-size:0.85rem;">
+                            ⚖️ Ajustar
+                        </button>
+                    </td>
                 </tr>
             `;
         });
     } catch (error) {
         console.error('Error cargando stock:', error);
+    }
+}
+
+// ============================================================
+// MODAL DE AJUSTE DE STOCK
+// ============================================================
+function abrirModalAjuste(codigo, nombre, stockActual, costoActual) {
+    document.getElementById('ajusteCodigo').value    = codigo;
+    document.getElementById('ajusteNombre').value    = nombre;
+    document.getElementById('ajusteStock').value     = stockActual;
+    document.getElementById('ajusteCosto').value     = costoActual;
+    document.getElementById('ajusteMotivo').value    = '';
+    document.getElementById('modalAjuste').style.display = 'flex';
+    document.getElementById('ajusteStock').focus();
+}
+
+function cerrarModalAjuste() {
+    document.getElementById('modalAjuste').style.display = 'none';
+}
+
+async function guardarAjuste() {
+    const codigo     = document.getElementById('ajusteCodigo').value;
+    const nuevoStock = parseFloat(document.getElementById('ajusteStock').value);
+    const nuevoCosto = parseFloat(document.getElementById('ajusteCosto').value);
+    const motivo     = document.getElementById('ajusteMotivo').value.trim();
+    const btn        = document.getElementById('btnGuardarAjuste');
+
+    if (isNaN(nuevoStock) || nuevoStock < 0) { showNotification('El stock debe ser 0 o mayor', 'error'); return; }
+    if (isNaN(nuevoCosto) || nuevoCosto < 0) { showNotification('El costo debe ser 0 o mayor',  'error'); return; }
+
+    btn.disabled = true; btn.textContent = '⏳ Guardando...';
+    try {
+        const r = await fetch('/inventario/ajuste', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codigo, nuevoStock, nuevoCosto, motivo })
+        });
+        const d = await r.json();
+        if (d.success) {
+            showNotification('✅ Stock ajustado correctamente', 'success');
+            cerrarModalAjuste();
+            cargarStock();
+        } else {
+            showNotification(d.error || 'Error al ajustar', 'error');
+            btn.disabled = false; btn.textContent = '💾 Guardar Ajuste';
+        }
+    } catch(e) {
+        showNotification('Error de conexión', 'error');
+        btn.disabled = false; btn.textContent = '💾 Guardar Ajuste';
     }
 }
 
