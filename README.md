@@ -1,4 +1,4 @@
-# 🍽️ CHEF MASTER PRO v1.5
+# 🍽️ CHEF MASTER PRO v2.1
 
 **Sistema Integral de Gestión de Cocina Profesional**
 
@@ -6,7 +6,7 @@
 
 ---
 
-## 🚀 NOVEDADES v1.5
+## 🚀 NOVEDADES v2.1
 
 ### ⭐ Tres Mejoras Críticas Implementadas
 
@@ -216,7 +216,7 @@ Fecha: Abril 2026
 
 ## 📞 SOPORTE
 
-1. Revisar `MANUAL_V1.5.md`
+1. Revisar `MANUAL_V2.1.md`
 2. Revisar comentarios en código
 3. Contactar administrador del sistema
 
