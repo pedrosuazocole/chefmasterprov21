@@ -3034,6 +3034,41 @@ app.get('/api/exportar/ventas/xlsx', requireAuth, (req, res) => {
 });
 
 // ==================================================
+// RUTAS DE ADMINISTRACIÓN (solo admin)
+// ==================================================
+
+// Opción A: Resetear stock + limpiar historial, kardex y producción
+app.get('/admin/resetear-stock', requireAuth, (req, res) => {
+    const user = leerDatos(FILES.usuarios).find(u => u.id === req.session.userId);
+    if (!user || user.rol !== 'admin') {
+        return res.status(403).json({ error: 'Solo administradores' });
+    }
+    const inventario = leerDatos(FILES.inventario);
+    inventario.forEach(i => { i.stock = 0; i.costoUnitario = 0; });
+    guardarDatos(FILES.inventario,         inventario);
+    guardarDatos(FILES.historial,          []);
+    guardarDatos(FILES.kardex,             []);
+    guardarDatos(FILES.produccion,         []);
+    guardarDatos(FILES.productoTerminado,  []);
+    guardarDatos(FILES.movimientosProducto,[]);
+    res.json({ success: true,
+        mensaje: `Stock en 0 para ${inventario.length} artículos. Historial, Kardex y Producción limpiados.` });
+});
+
+// Opción B: Solo poner stock en 0 (conserva historial y kardex)
+app.get('/admin/solo-stock-cero', requireAuth, (req, res) => {
+    const user = leerDatos(FILES.usuarios).find(u => u.id === req.session.userId);
+    if (!user || user.rol !== 'admin') {
+        return res.status(403).json({ error: 'Solo administradores' });
+    }
+    const inventario = leerDatos(FILES.inventario);
+    inventario.forEach(i => { i.stock = 0; i.costoUnitario = 0; });
+    guardarDatos(FILES.inventario, inventario);
+    res.json({ success: true,
+        mensaje: `Stock en 0 para ${inventario.length} artículos. Historial y Kardex intactos.` });
+});
+
+// ==================================================
 // INICIAR SERVIDOR
 // ==================================================
 app.listen(PORT, () => {
