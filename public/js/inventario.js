@@ -261,7 +261,7 @@ async function cargarStock() {
                     <td><strong>L. ${valorTotal.toFixed(2)}</strong></td>
                     <td>${estadoBadge}</td>
                     <td>
-                        <button onclick="abrirModalAjuste('${item.codigo}','${item.ingrediente}',${stock},${costoUnitario})"
+                        <button onclick="abrirModalAjuste('${item.codigo}','${item.ingrediente}',${stock},${costoUnitario.toFixed(5)})"
                                 style="background:#ff9800;color:white;border:none;border-radius:6px;padding:0.3rem 0.65rem;cursor:pointer;font-size:0.85rem;">
                             ⚖️ Ajustar
                         </button>
@@ -281,7 +281,7 @@ function abrirModalAjuste(codigo, nombre, stockActual, costoActual) {
     document.getElementById('ajusteCodigo').value    = codigo;
     document.getElementById('ajusteNombre').value    = nombre;
     document.getElementById('ajusteStock').value     = stockActual;
-    document.getElementById('ajusteCosto').value     = costoActual;
+    document.getElementById('ajusteCosto').value     = parseFloat(costoActual).toFixed(5);
     document.getElementById('ajusteMotivo').value    = '';
     document.getElementById('modalAjuste').style.display = 'flex';
     document.getElementById('ajusteStock').focus();
