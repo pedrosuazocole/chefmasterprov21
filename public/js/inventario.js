@@ -256,8 +256,8 @@ async function cargarStock() {
                     <td><strong>${item.ingrediente}</strong></td>
                     <td><strong style="font-size:1.1rem;">${stock.toFixed(2)}</strong></td>
                     <td>${item.unidad}</td>
-                    <td>L. ${costoUnitario.toFixed(2)}</td>
-                    <td style="color:#0068c9;font-weight:bold;">L. ${costoUnitario.toFixed(2)}</td>
+                    <td>L. ${costoUnitario.toFixed(5)}</td>
+                    <td style="color:#0068c9;font-weight:bold;">L. ${costoUnitario.toFixed(5)}</td>
                     <td><strong>L. ${valorTotal.toFixed(2)}</strong></td>
                     <td>${estadoBadge}</td>
                     <td>
@@ -311,6 +311,8 @@ async function guardarAjuste() {
         const d = await r.json();
         if (d.success) {
             showNotification('✅ Stock ajustado correctamente', 'success');
+            // FIX: resetear botón ANTES de cerrar para que quede limpio la próxima vez
+            btn.disabled = false; btn.textContent = '💾 Guardar Ajuste';
             cerrarModalAjuste();
             cargarStock();
         } else {
