@@ -100,18 +100,32 @@
         
         <div id="tab-lista" class="tab-content">
             <div class="card">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                     <h3>Recetas Guardadas</h3>
-                    <div>
-                        <button class="btn btn-sm" onclick="window.print()" 
-                                style="background:#555;color:white;margin-right:0.5rem;">
+                    <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                        <!-- BUSCADOR -->
+                        <div style="position:relative;">
+                            <span style="position:absolute;left:0.6rem;top:50%;transform:translateY(-50%);color:#999;font-size:0.95rem;">🔍</span>
+                            <input type="text" id="buscadorRecetas"
+                                   placeholder="Buscar receta..."
+                                   oninput="filtrarRecetasPorNombre()"
+                                   style="padding:0.45rem 0.75rem 0.45rem 2rem;border:1px solid #ddd;border-radius:8px;
+                                          font-size:0.92rem;width:200px;outline:none;transition:border 0.2s;"
+                                   onfocus="this.style.borderColor='#0068c9'"
+                                   onblur="this.style.borderColor='#ddd'">
+                        </div>
+                        <!-- Contador -->
+                        <span id="contadorRecetas" style="font-size:0.82rem;color:#888;white-space:nowrap;"></span>
+                        <!-- Botones exportar -->
+                        <button class="btn btn-sm" onclick="window.print()"
+                                style="background:#555;color:white;">
                             🖨️ Imprimir
                         </button>
-                        <button class="btn btn-sm" onclick="exportarExcel('recetas', 'recetas')" 
-                                style="background: #21c354; color: white; margin-right: 0.5rem;">
+                        <button class="btn btn-sm" onclick="exportarExcel('recetas', 'recetas')"
+                                style="background: #21c354; color: white;">
                             📊 Excel
                         </button>
-                        <button class="btn btn-sm" onclick="exportarPDF('recetas', 'recetas')" 
+                        <button class="btn btn-sm" onclick="exportarPDF('recetas', 'recetas')"
                                 style="background: #ff4b4b; color: white;">
                             📄 PDF
                         </button>
@@ -767,7 +781,41 @@
             if (mE) mE.addEventListener('click', function(e) {
                 if (e.target === this) cerrarModalEditarReceta();
             });
+
+            // Inicializar contador al cargar
+            actualizarContadorRecetas();
         });
+
+        // ── BUSCADOR DE RECETAS ──────────────────────────────
+        function filtrarRecetasPorNombre() {
+            const termino = document.getElementById('buscadorRecetas').value.toLowerCase().trim();
+            const tarjetas = document.querySelectorAll('[data-receta-id]');
+            let visibles = 0;
+
+            tarjetas.forEach(function(tarjeta) {
+                const nombre = (tarjeta.dataset.plato || '').toLowerCase();
+                const coincide = !termino || nombre.includes(termino);
+                tarjeta.style.display = coincide ? '' : 'none';
+                if (coincide) visibles++;
+            });
+
+            actualizarContadorRecetas(visibles, tarjetas.length);
+        }
+
+        function actualizarContadorRecetas(visibles, total) {
+            const cnt = document.getElementById('contadorRecetas');
+            if (!cnt) return;
+            const tarjetas = document.querySelectorAll('[data-receta-id]');
+            const t = total !== undefined ? total : tarjetas.length;
+            const v = visibles !== undefined ? visibles : t;
+            if (v < t) {
+                cnt.textContent = v + ' de ' + t + ' receta(s)';
+                cnt.style.color = '#0068c9';
+            } else {
+                cnt.textContent = t + ' receta(s)';
+                cnt.style.color = '#888';
+            }
+        }
     </script>
 
     <!-- ============================================================
